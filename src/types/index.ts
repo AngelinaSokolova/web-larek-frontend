@@ -9,7 +9,7 @@ export interface Product {
     id: number;
     name: string;
     description: string;
-    price: number;
+    price: number | null;
     category: string;
 }
 
@@ -34,10 +34,10 @@ export interface CartState {
 
 // Перечисление событий
 export enum EventType {
-    PRODUCT_ADDED_TO_CART,
-    ORDER_PLACED,
+    PRODUCT_ADDED_TO_CART = 'cart: add',
+    ORDER_PLACED = 'order: place',
     // Другие события
-  }
+}
   
   // Интерфейс для события добавления товара в корзину
 export interface ProductAddedToCartEvent {
