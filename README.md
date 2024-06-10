@@ -43,79 +43,72 @@ yarn build
 
 ## Данные и типы данных, используемых в приложении. 
 
-Данные карточки:
+//Данные карточки:
 ```
 export interface Product {
-    id: number;
-    name: string;
+    id: string;
     description: string;
     price: number | null;
-    link:string;
+    image: string;
     title: string;
     category: string;
 }
 ```
-Данные пользователя, используемые для оформления заказа:
+//Данные пользователя, используемые для оформления заказа:
 ```
 export interface IUser {
-    paymentType: Pay;
-    address:string;
-    email:string;
-    phone:string;
+    payment: string;
+    address: string;
+    email: string;
+    phone: string;
     total: number;
-    items: string;
+    items: string[];
 }
 ```
-Тип оплаты, который может быть выбран пользователем при оформлении заказа:
+//Данные формы
 ```
-type Pay = 'Онлайн'| 'Наличные'
+export interface IOrderForm {
+    payment?: string;
+    email: string;
+    phone: string;
+    address: string
+}
 ```
-Интерфейс определяющий структуру данных списка карточек товаров:
+//Интерфейс определяет структуру данных списка карточек товаров:
 ```
 export interface ICardList  {
     total:number;
     cards: Product[];
     preview: string | null;
-    addBasket(cardId: string, payload: Function | null):void;
 }
 ```
-Структура корзины пользователя, включая список товаров и общую стоимость:
+//Данные ошибок
 ```
-export interface IBacket extends Product, IUser {
-    title: string;
-    price: number;
-    total: number;
-    deleteBasketCard(card: Product, payload: Function | null): void;
-    changeTotal(total: number, payload: Function | null):void;
+export type FormErrors = Partial<Record<keyof IOrderForm, string>>;
+```
+//Отвечает за валидность формы
+```
+export interface IForm {
+    valid: boolean;
+    errors: string[];
 }
 ```
-Данные, необходимые для превью на главной странице:
+//Отвечает за состояние приложения
 ```
-export type PreviewCard = Pick <Product, "category"|"name"| "link"|"price" >;
+export interface IAppState {
+    catalog: Product[];
+    basket: string[];
+    preview: string | null;
+    order: IUser;
+    loading: boolean;
+}
 ```
-Тип карточки товара:
+//Отвечает за результат заказа с полями id
 ```
-export type CardInfo = Pick<Product, 'category' | 'title' | 'link' | 'price'>;
-```
-Тип карточки товара в модалном окне:
-```
-export type CardModalInfo = Pick<Product, 'link' | 'category' | 'title' | 'description' | 'price'>;
-```
-Тип данных в модалке корзины:
-```
-export type BasketInfo = Pick<IBacket, 'title' | 'price' | 'title'>;
-```
-Тип данных в модальном окне оформления заказа (почта и телефон):
-```
-export type ModalOrderData = Pick<IUser, 'email' | 'phone'>;
-```
-Тип данных в модальном окне оформления заказа(способ оплаты и адрес):
-```
-export type ModalOrderPayment = Pick<IUser, 'paymentType' | 'adress'>;
-```
-Тип данных в модальном окне после оформления заказа:
-```
-export type ModalВecorated = Pick<IUser, 'total'>
+export interface IOrderResult {
+    id: string;
+    total: number
+}
 ```
 
 ## Архитектура приложения
@@ -144,135 +137,222 @@ export type ModalВecorated = Pick<IUser, 'total'>
 - `post` - принимает объект с данными, которые будут переданы в JSON в теле запроса, и отправляет эти данные на ендпоинт переданный как параметр при вызове метода. По умолчанию выполняется `POST` запрос, но метод запроса может быть переопределен заданием третьего параметра при вызове.
 
 ## Слой данных
-
-### Класс CardData
-Класс CardData хранит данные одной карточки товара и предоставляет методы для работы с этими данными. Он также содержит экземпляр класса EventEmitterUserData` для инициации событий, связанных с изменением данных карточки.
+### Класс AppState
+Класс отвечает за хранение и логику работы с данными приложения. 
 
 В полях класса хранятся следующие данные:
-- cards: Product[]; - массив объектов карточек
-- preview: string | null - id карточки, выбранной для просмотра в модальной окне
+- basket: CardItem[] = [] - коллекция карточек в корзине
+- basketTotal: number - сумма
+- catalog: CardItem[] - каталог товаров на странице
+- preview: string; - данные для превью
+- formErrors: FormErrors = {}; - объект ошибок
+
+Объект заказа
+- order: IUser = {\
+- payment: '',\
+- email: '',\
+- phone: '',\
+- address:'',\
+- total: 0,\
+- items: []\
+};
 
 Класс так же содержит методы:
-- addBasket(cardId: string, payload: Function | null):void - позволяет отправить выбранный товар в корзину
 
- ### Класс UserData
- Класс UserData хранит данные пользователя, необходимые для оформления заказа. Он также содержит экземпляр класса EventEmitter и предоставляет методы для валидации данных пользователя.
+- getCard (id:string):Product- возвращает карточку по ее id
+- setCatalog(items: CardItem[]) - устанавливает каталог
+- setBasket(item: CardItem) - устанавливает данные корзины
+- clearBasket() - очистка корзины
+- clearOrder() - очистка заказа
+- setItems(item:ICard) - наполнить заказ товарами
+- getBasket () - получить данные корзины
+- checkCard (id:string) - проверка карточки
+- setPreview(item: CardItem) - установка превью
+- removeFromBasket (id:string) - убрать даннные из корзины
+- getTotal() - получить сумму
+- getBasketNumber() - получить количество товаров в корзине
+- setOrderField(field: keyof IOrderForm, value: string) - заполнить поля заказа
+- validateOrder()  - валидация
 
- В полях класса хранятся следующие данные: 
-- paymentType: Pay - тип оплаты
-- address: string - адрес
-- email: string - адрес электронной почты
-- phone: string  - номер телефона получателя
-- events: IEvents - экземпляр класса `EventEmitter` для инициации событий
-
-Класс имеет следующий набор методов:
-
-*  validateUserPayAdress (data:IUser):boolean  - валидация данных поля с адресом
-*  validateUserContacts (data:IUser):boolean - валидация данных полей с контактными данными (телефон, почта).
-
-### Класс BasketData
-Класс BasketData отвечает за хранение данных корзины пользователя и предоставляет методы для работы с этими данными. Он содержит экземпляр класса EventEmitter для инициации событий, связанных с изменением данных корзины.
-В полях класса хранятся следующие данные:
-
-- title: string; - Заголовок товара
-- price: number; - Цена товара
-- total: number; - Общая сумма всего заказа
-- events: EventEmitter - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
-
-Методы класса:
-
-- deleteBasketCard(card: ICard, payload: Function | null): void - удаляет товар из корзины
-- changeTotal(total: number, payload: Function | null):void; - метод который пересчитывает общую сумму заказа
 
 ## Классы представления
-Все классы представления отвечают за отображение внутри контейнера (DOM-элемент) передаваемых в них данных.
+### Базовый Класс Component
+Класс является дженериком и родителем всех компонентов слоя представления. В дженерик принимает тип объекта, в котором данные будут передаваться в метод render для отображения данных в компоненте. В конструктор принимает элемент разметки, являющийся основным родительским контейнером компонента. Содержит метод render, отвечающий за сохранение полученных в параметре данных в полях компонентов через их сеттеры, возвращает обновленный контейнер компонента.
 
 ### Класс Modal
-Реализует модальное окно. Так же предоставляет методы open и close для управления отображением модального окна. Устанавливает слушатели на клавиатуру, для закрытия модального окна по Esc, на клик в оверлей и кнопку-крестик для закрытия попапа.
-
-- constructor(selector: string, events: IEvents) - Конструктор принимает селектор, по которому в разметке страницы будет идентифицировано модальное окно и экземпляр класса EventEmitter для возможности инициации событий.
+Реализует модальное окно. Так же предоставляет методы `open` и `close` для управления отображением модального окна. Устанавливает слушатели на клавиатуру, для закрытия модального окна по Esc, на клик в оверлей и кнопку-крестик для закрытия попапа.\
+\
+Интерфейс, описывающий объект с разметкой для вставки в модальное окно
+```
+interface IModalData {
+    content: HTMLElement;
+}
+```
 Поля класса:
+- content: HTMLElement - контейнер для вставки
+- events: IEvents - брокер событий 
+- closeButton: HTMLButtonElement - кнопка закрытия
+- render(data: IModalData): HTMLElement - метод будет возвращать элемент модального окну с установленной разметкой
+- сеттер set content(value: HTMLElement) - для установки контента 
 
-- modal: HTMLElement - элемент модального окна
-- closeModal - кнопка закрытия модалки
-- events: IEvents - брокер событий
+Конструктор:
+- constructor(container: HTMLElement events: IEvents) -  принимает элемент  модального окна и экземпляр класса `EventEmitter` для возможности инициации событий.
 
-### Класс ModalBasket
-Расширяет класс Modal. Предназначен для реализации модального окна корзины. При открытии модального окна предоставляет данные выбранных товаров, возможность удаление выбранного товара и счетчик общей суммы заказа. Если в корзине есть хоть какие-то данные дает возможность оформить заказ
+Методы класса:
+- open():void - метод для открытия модального окна
+- close():void  - метод для закрытия модального окна. Так же обнуляет разметку и удаляет обработчики событий с разметки через this.content = null
+- handleEsc(event):void  - закрытие по кнопке esc
+- render():HTMLElement - отрисовка разметки для модального окна
+- сеттер set content - вставляет контент в контейнер модального окна
+
+### Класс Card
+Отвечает за отображение карточки, задавая в карточке данные названия товара, категории, изображения, стоимости, описания товара. Класс используется для отображения карточек на странице сайта. В конструктор класса передается DOM элемент темплейта. В классе устанавливаются слушатели на все интерактивные элементы, в результате взаимодействия с которыми пользователя генерируются соответствующие события.\
+
+Интерфейс событий
+```
+interface ICardActions {
+    onClick?: (event: MouseEvent) => void;
+}
+```
+
+Поля класса содержат элементы разметки элементов карточки. Конструктор, кроме темплейта принимает экземпляр `EventEmitter` для инициации событий.
+    protected _title: HTMLElement;
+    protected _category: HTMLElement;
+    protected _image?: HTMLImageElement;
+    protected _description?: HTMLElement;
+    protected _price: HTMLElement;
+    protected _button?: HTMLButtonElement;
+Поля:
+- category: HTMLElement - отображение категории
+- title: HTMLElement - название
+- description: HTMLElement - описание
+- image:HTMLDivElement - картинка
+- price:HTMLElement -  стоимость
+- button: HTMLButtonElement; - кнопка
+
+Конструктор:
+- constructor(blockName: string, container: HTMLElement, actions?: ICardActions) -  принимает селектор, по которому в разметке страницы будет идентифицировано модальное окно и экземпляр класса `EventEmitter` для возможности инициации событий.
+   
+Методы:
+- сеттеры и геттеры для наполнения
+- changeButton() - измененеие отображения кнопки
+
+
+### Класс BasketCard
+Отвечает за отображение списка товаров, добавленных в корзину
+
 Поля класса:
+   - title: HTMLElement; - элемент заголовка
+   - price: HTMLElement; - цена
+   - button: HTMLButtonElement; - элемент кнопки
+   - listNumber: HTMLElement; - контейнер для вывода номера в списке
 
-- submitOrder: HTMLButtonElement - Кнопка оформления заказа
-- itemCard: HTMLElement - Элемент товара помещенный в корзину
-- deleteButtonItem: HTMLButtonElement - Кнопка удаление элемента в корзине
+Конструктор:
+- constructor( blockName: string, container: HTMLElement, actions?: ICardActions)- в конструктор принимает контейнер, куда выводится список товаров
 
 Методы:
 
-- setValid(isValid: boolean):void  - изменяет активность кнопки офрмления заказа (если в корзине есть какой то элемент)
-- get form: HTMLElement - геттер для получения элемента формы.
+- сеттеры для заполнения элементов разметки корзины 
 
-### Класс ModalOrderPayment
-Расширяет класс Modal. Предназначен для реализации модального окна оформления заказа(форма оплаты, адресс). В модальном окне реализиван функционал позволяющий пользователю указать способ оплаты и адресс доставки.
+
+### Класс Form
+Является родительским классом для всех форм в приложении. Содержит общие методы для форм. Наследуется от Component
+
+Отвечает за валидность формы:
+```
+interface IForm {
+    valid: boolean;
+    errors: string[];
+}
+```
+
 Поля класса:
+- submit: HTMLButtonElement - кнопка сабмита
+- errors: HTMLElement - поля с ошибками
 
-- onlineButton - кнопка способ оплаты онлайн
-- receivingButton - кнопка способ оплаты при получении
-- _form - элемент формы
-- submitThen: HTMLButtonElement - Кнопка далее в фомре
+Конструктор:
+- constructor(container: HTMLFormElement,  events: IEvents) 
+Методы:
+- onInputChange(field: keyof T, value: string) - реакция на события инпутов формы
+- set valid(value: boolean) - устанавливает валидность формы
+- set errors(value: string)  - устанавливает ошибки
+- render(state: Partial<T> & IForm) - возвращает элемент формы с наполнением
 
+### Класс Order
+Наследуется от класса Form. Управляет отображением различных вариантов форм на странице
+
+Поля класса:
+- btnCollection :  HTMLElement[] - коллекция собственных кнопок, отвечающих за выбор оплаты
+
+Конструктор:
+- constructor(container: HTMLFormElement, events: IEvents)
 
 Методы:
+- changeClass(name?:string) - меняет класс кнопок выбора оплаты
 
-- setValid(isValid: boolean):void  - изменяет активность кнопки далее (если все данные заполнены)
-- setError(data: { field: string, value: string, validInformation: string }): void - принимает объект с данными для отображения или сокрытия текстов ошибок под полями ввода
-- showInputError (field: string, errorMessage: string): void - отображает полученный текст ошибки под указанным полем ввода
-- hideInputError (field: string): void - очищает текст ошибки под указанным полем ввода
-
-### Класс ModalOrderData
-Расширяет класс Modal. Предназначен для реализации модального окна с формой содержащей поля ввода. При изменении данных в полях ввода инициирует событие изменения данных. Предоставляет методы для отображения ошибок и управления активностью кнопки оплаты
+### Класс Page
+Отвечает за отрисовку страницы
+```
+interface IPage {
+    counter: number; 
+    catalog: HTMLElement[]; 
+}
+```
 Поля класса:
-
-- inputEmail - поле ввода почты
-- inputPhone - поле ввода телефона
-- submitPayment: HTMLButtonElement - Кнопка оплата в фомре
+- counter: HTMLElement; - количество товара в корзине
+- catalog: HTMLElement; - массив разметок карточки
+- wrapper: HTMLElement; - общий контейнер страницы
+- basket: HTMLElement; - элемент корзины
 
 Методы:
+- сеттеры и геттеры для наполнения 
+- set locked () - сеттер отвечает за установку блокировки страницы
 
-- setValid(isValid: boolean):void  - изменяет активность кнопки далее (если все данные заполнены)
-- setError(data: { field: string, value: string, validInformation: string }): void - принимает объект с данными для отображения или сокрытия текстов ошибок под полями ввода
-- showInputError (field: string, errorMessage: string): void - отображает полученный текст ошибки под указанным полем ввода
-- hideInputError (field: string): void - очищает текст ошибки под указанным полем ввода
-
-### Класс ModalDecorated
-Расширяет класс Modal. Предназначен для реализации модального окна с данными общей суммы покупки пользователя. Класс дает возможность очистить корзину 
+### Класс Positive
+Класс, отвечающий за окно успешного подтверждения заказа.
+```
+interface IPositive {
+    total: number;
+}
+```
 Поля класса:
 
-- totalPrice - данные общей суммы покупками
-- submitButton - кнопка которая закрывает модальное окно и очищает корзину
+- close: HTMLElement - кнопка закрытия
+
+Конструктор:
+- constructor(container: HTMLElement, actions: IEvent) - принимает в кончтруктор элемент разметки и брокер событий
 
 Методы:
-
-- close (): void - расширяет родительский метод дополнительно при закрытии очищая поля формы
-
-### Класс CardsContainer
-Отвечает за отображение блока с карточками на главной странице. Предоставляет метод addCard(cardElement: HTMLElement) для добавления карточек на страницу и сеттер container для полного обновления содержимого. В конструктор принимает контейнер, в котором размещаются карточки.
+- set total(total: number) - установка значения суммы 
 
 ## Слой коммуникации
-### Класс IApiClient
+### Класс LarekApi
 Принимает в конструктор экземпляр класса Api и предоставляет методы реализующие взаимодействие с бэкендом сервиса.
+Методы: 
+- getCardList(): Promise<Product[]> - возвращает массив данных карточек 
+- getCardItem(id: string): Promise<Product> - запрос данных одной карточки
+- orderLots(order: IUser): Promise<IOrderResult> - отправка данных заказа
 
-## Взаимодействие компонентов
+### Взаимодействие компонентов
 
-Код, описывающий взаимодействие представления и данных между собой находится в файле index.ts, выполняющем роль презентера. Взаимодействие осуществляется за счет событий генерируемых с помощью брокера событий и обработчиков этих событий, описанных в index.ts В index.ts сначала создаются экземпляры всех необходимых классов, а затем настраивается обработка событий.
+Код, описывающий взаимодействие представления и данных между собой находится в файле `index.ts`, выполняющем роль презентера.
+Взаимодействие осуществляется за счет событий генерируемых с помощью брокера событий и обработчиков этих событий, описанных в index.ts
+В `index.ts` сначала создаются экземпляры всех необходимых классов, а затем настраивается обработка событий.
+Так же в файле инициированы шаблоны разметки
 
-События, возникающие при взаимодействии пользователя с интерфейсом (генерируются классами, отвечающими за представление)
+*Список всех событий:*
+- `card:select` - усчтановить карточку для превью
+- `basket:delete-carditems:changed` - удалить из корзины
+- `basket:change` - изменение корзины
+- `preview:changed` - открыть превью
+- `basket:open` - открыть корзину
+- `order:open` - открыть форму заказа
+- `contacts:open` - открыть форму заказа с контактными данными
+- `/^order\..*:change/` - отслеживание изменения формы 
+- `/^contacts\..*:change/` - отслеживание изменения формы 
+- `payment:change` - усановить тип оплаты
+- `contacts:submit` - отправка формы
+- `formErrors:change` - показ ошибок
+- `modal:open` - открыть модальное окно 
+- `modal:close` - закрыть модальное окно 
 
-- Basket:open - открытие модального окна корзины
-- CardElement:open - открытие модального окна карточки
-- choice: button - выбор кнопки способа оплаты
-- address: input - введение данных адреса доставки
-- email: input - введение данных почты
-- phone: input - введение данных телефона
-- choice: validation - событие, сообщающее о необходимости валидации формы способа оплаты
-- address: validation - событие, сообщающее о необходимости валидации формы адреса доставки
-- email: validation - событие, сообщающее о необходимости валидации формы email
-- phone: validation - событие, сообщающее о необходимости валидации формы phone
