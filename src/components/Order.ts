@@ -1,6 +1,6 @@
 //В данном файле выполняется импорт зависимостей для создания формы заказа. В конструкторе класса создается форма и устанавливаются обработчики событий для кнопок оплаты и отправки формы. Метод changeClass используется для изменения класса кнопок в зависимости от выбранного варианта оплаты.
 
-import { Form } from './common/Form';
+import { Form } from './basic/Form';
 import { IUser } from '../types';
 import { EventEmitter, IEvents } from './base/events';
 import { ensureElement, ensureAllElements } from '../utils/utils';

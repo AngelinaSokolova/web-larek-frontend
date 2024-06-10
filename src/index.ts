@@ -6,11 +6,11 @@ import { AppState, CatalogChange, CardItem } from './components/DataLarek';
 import { Page } from './components/Page';
 import { cloneTemplate, createElement, ensureElement } from './utils/utils';
 import { Card, ProductItem, BasketCard } from './components/Card';
-import { Modal } from './components/common/Modal';
-import { Basket } from './components/common/Basket';
+import { Modal } from './components/basic/Modal';
+import { Basket } from './components/basic/Basket';
 import { Order } from './components/Order';
 import { IOrderForm } from './types';
-import { Positive } from './components/common/Positive';
+import { Positive } from './components/basic/Positive';
 
 const api = new LarekAPI(CDN_URL, API_URL);
 const events = new EventEmitter();
