@@ -7,8 +7,13 @@ import { ensureElement, ensureAllElements } from '../utils/utils';
 
 export class Order extends Form<IUser> {
 	_btnCollection: HTMLButtonElement[];
+
+	//1) Коллекция полей ввода для обоих форм
+	inputCollection: HTMLInputElement[];
+
 	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
+			
 		this._submit = ensureElement<HTMLButtonElement>(
 			'button[type=submit]',
 			this.container
@@ -17,6 +22,8 @@ export class Order extends Form<IUser> {
 			'.button_alt',
 			container
 		);
+
+		this.inputCollection = ensureAllElements<HTMLInputElement>('.form__input', container);
 
 		if (this._btnCollection) {
 			this._btnCollection.forEach((btn) => {
@@ -46,4 +53,10 @@ export class Order extends Form<IUser> {
 			this.toggleClass(button, 'button_alt-active', button.name === name);
 		});
 	}
+
+	//2) функция проверяет валидность поля ввода и в зависимости от этого устнавливает значение кнопки
+	updateButtonState() {
+		const isCollectionInput = this.inputCollection.some((input) => input.value.trim() !== '');
+		this.buttonDisable(!(isCollectionInput));
+}
 }

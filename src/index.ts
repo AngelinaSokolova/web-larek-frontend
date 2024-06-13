@@ -137,7 +137,18 @@ events.on('preview:changed', (item: CardItem) => {
 				id: item.id,
 			}),
 		});
+
+		// добавляем проверку цены товара и если цена null или undefined откобчаем кнопку добавления в корзину
+		
+		if (item.price === null || item.price === undefined) {
+			card.buttonDisable(true);
+		} else if (
+			appData.getBasket().some((basketItem) => basketItem.id === item.id)
+		) {
+			card.buttonDisable(true);
+		}
 	};
+
 	// запрос к апи на получение карточки по id
 	if (item) {
 		api
@@ -239,6 +250,12 @@ events.on('contacts:submit', () => {
 					contacts.reset();
 				},
 			});
+
+
+			order.reset();
+			contacts.reset();
+
+			
 			success.total = result.total;
 			modal.render({
 				content: success.render({}),
@@ -252,6 +269,9 @@ events.on('contacts:submit', () => {
 // блокировка/разблокировка в момент, когда открыто модальное окно
 
 events.on('modal:open', () => {
+	// вызываем метод проверки полей ввода для установки состояния кнопки
+	order.updateButtonState();
+	contacts.updateButtonState();
 	page.locked = true;
 });
 

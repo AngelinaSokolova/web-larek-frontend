@@ -67,29 +67,66 @@ export class Card<T> extends Component<ICardView<T>> {
 	get price(): string {
 		return this._title.textContent || '';
 	}
+	// set category(value: string) {
+	// 	this.setText(this._category, value);
+	// 	switch (value) {
+	// 		case 'другое':
+	// 			this.setCategoryClass(`other`);
+	// 			break;
+	// 		case 'софт-скил':
+	// 			this.setCategoryClass(`soft`);
+	// 			break;
+	// 		case 'дополнительное':
+	// 			this.setCategoryClass(`additional`);
+	// 			break;
+	// 		case 'кнопка':
+	// 			this.setCategoryClass(`button`);
+	// 			break;
+	// 		case 'хард-скил':
+	// 			this.setCategoryClass(`hard`);
+	// 			break;
+	// 	}
+	// }
+	// setCategoryClass(value: string) {
+	// 	this._category.classList.add(`${this.blockName}__category_${value}`);
+	// }
+
+	// изменила методы чтобы классы не накладывались друг на друга
+
 	set category(value: string) {
-		this.setText(this._category, value);
-		switch (value) {
-			case 'другое':
-				this.setCategoryClass(`other`);
-				break;
-			case 'софт-скил':
-				this.setCategoryClass(`soft`);
-				break;
-			case 'дополнительное':
-				this.setCategoryClass(`additional`);
-				break;
-			case 'кнопка':
-				this.setCategoryClass(`button`);
-				break;
-			case 'хард-скил':
-				this.setCategoryClass(`hard`);
-				break;
-		}
-	}
-	setCategoryClass(value: string) {
-		this._category.classList.add(`${this.blockName}__category_${value}`);
-	}
+    this.setText(this._category, value);
+    switch (value) {
+        case 'другое':
+            this.setCategoryClass('other');
+            break;
+        case 'софт-скил':
+            this.setCategoryClass('soft');
+            break;
+        case 'дополнительное':
+            this.setCategoryClass('additional');
+            break;
+        case 'кнопка':
+            this.setCategoryClass('button');
+            break;
+        case 'хард-скил':
+            this.setCategoryClass('hard');
+            break;
+    }
+}
+
+private setCategoryClass(categoryClass: string) {
+    // Удаляем все возможные классы категорий
+    this._category.classList.remove(
+        'card__category_other',
+        'card__category_soft',
+        'card__category_additional',
+        'card__category_button',
+        'card__category_hard'
+    );
+
+    // Добавляем новый класс
+    this._category.classList.add(`card__category_${categoryClass}`);
+}
 
 	set title(value: string) {
 		this.setText(this._title, value);
@@ -118,6 +155,10 @@ export class Card<T> extends Component<ICardView<T>> {
 	}
 	changeButton() {
 		this._button.textContent = 'Добавлен в корзину';
+	}
+
+	buttonDisable(state: boolean) {
+		this.setDisabled(this._button, state);
 	}
 }
 
